@@ -850,17 +850,13 @@ export default function App() {
   const save = async () => {
     setSaving(true); showToast("⏳ Saving...", "loading");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 1000,
-          mcp_servers: [{ type: "url", url: "https://drivemcp.googleapis.com/mcp/v1", name: "google-drive" }],
-          system: "Append a CSV row to a Google Sheet using Drive MCP. Reply only 'Done'.",
-          messages: [{ role: "user", content: `Append to Sheet ID ${SHEET_ID}:\n${toRow(form)}\nReply Done.` }],
-        }),
+      const res = await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ row: toRow(form), sheetId: SHEET_ID }),
       });
       const data = await res.json();
-      if (data.content) { saveLocal(form); showToast("✅ Saved to Google Drive!", "success"); }
+      if (data.success) { saveLocal(form); showToast("✅ Saved to Google Drive!", "success"); }
       else throw new Error();
     } catch { saveLocal(form); showToast("💾 Saved locally", "error"); }
     setSaving(false);
